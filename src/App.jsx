@@ -5,16 +5,27 @@ import Header from './components/Header.jsx'
 import SelectorRuta from './components/SelectorRuta.jsx'
 import ListaVuelos from './components/ListaVuelos.jsx'
 import FormularioReserva from './components/FormularioReserva.jsx'
+import MisReservas from './components/MisReservas.jsx'
 import Footer from './components/Footer.jsx'
 
 function nombreCiudad(codigo) {
   return CIUDADES.find((c) => c.codigo === codigo)?.nombre ?? codigo
 }
 
+function cargarReservas() {
+  try {
+    const guardadas = localStorage.getItem('aerocol-reservas')
+    return guardadas ? JSON.parse(guardadas) : []
+  } catch {
+    return []
+  }
+}
+
 function App() {
   const [origen, setOrigen] = useState('')
   const [destino, setDestino] = useState('')
   const [vueloSeleccionado, setVueloSeleccionado] = useState(null)
+  const [reservas, setReservas] = useState(cargarReservas)
 
   const ciudadesDestino = CIUDADES.filter((c) => c.codigo !== origen)
 
@@ -38,6 +49,18 @@ function App() {
     setOrigen(destino)
     setDestino(origen)
     setVueloSeleccionado(null)
+  }
+
+  const agregarReserva = (nueva) => {
+    const actualizadas = [...reservas, nueva]
+    setReservas(actualizadas)
+    localStorage.setItem('aerocol-reservas', JSON.stringify(actualizadas))
+  }
+
+  const eliminarReserva = (id) => {
+    const actualizadas = reservas.filter((r) => r.id !== id)
+    setReservas(actualizadas)
+    localStorage.setItem('aerocol-reservas', JSON.stringify(actualizadas))
   }
 
   return (
@@ -80,10 +103,12 @@ function App() {
           vuelo={vueloSeleccionado}
           nombreOrigen={nombreCiudad(origen)}
           nombreDestino={nombreCiudad(destino)}
-          onReservar={() => setVueloSeleccionado(null)}
+          onReservar={agregarReserva}
           onCancelar={() => setVueloSeleccionado(null)}
         />
       )}
+
+      <MisReservas reservas={reservas} onEliminar={eliminarReserva} />
 
       <Footer anio={2026} />
     </main>
