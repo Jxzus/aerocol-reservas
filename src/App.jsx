@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import './App.css'
 import { CIUDADES, VUELOS } from './data/vuelos.js'
 import Header from './components/Header.jsx'
@@ -24,6 +24,7 @@ function cargarReservas() {
 function App() {
   const [origen, setOrigen] = useState('')
   const [destino, setDestino] = useState('')
+  const [orden, setOrden] = useState('precio-asc')
   const [vueloSeleccionado, setVueloSeleccionado] = useState(null)
   const [reservas, setReservas] = useState(cargarReservas)
 
@@ -33,6 +34,14 @@ function App() {
     origen !== '' && destino !== ''
       ? VUELOS.filter((v) => v.origen === origen && v.destino === destino)
       : []
+
+  const vuelosOrdenados = [...vuelosFiltrados].sort((a, b) => {
+    if (orden === 'precio-asc') return a.precio - b.precio
+    if (orden === 'precio-desc') return b.precio - a.precio
+    if (orden === 'hora') return a.hora.localeCompare(b.hora)
+    if (orden === 'avion') return a.avion.localeCompare(b.avion)
+    return 0
+  })
 
   const manejarOrigen = (codigo) => {
     setOrigen(codigo)
@@ -79,18 +88,30 @@ function App() {
           onDestino={manejarDestino}
         />
 
-        <button type="button" onClick={intercambiar} disabled={!origen || !destino}>
-          🔄 Intercambiar
-        </button>
+        <div className="selector-controles">
+          <button type="button" onClick={intercambiar} disabled={!origen || !destino}>
+            🔄 Intercambiar
+          </button>
+
+          <label className="campo-orden">
+            <span>Ordenar por:</span>
+            <select value={orden} onChange={(e) => setOrden(e.target.value)}>
+              <option value="precio-asc">Precio: menor a mayor</option>
+              <option value="precio-desc">Precio: mayor a menor</option>
+              <option value="hora">Hora de salida</option>
+              <option value="avion">Avión (A–Z)</option>
+            </select>
+          </label>
+        </div>
       </section>
 
       {!origen || !destino ? (
         <p className="mensaje">Elige origen y destino para buscar vuelos 🛫</p>
-      ) : vuelosFiltrados.length === 0 ? (
+      ) : vuelosOrdenados.length === 0 ? (
         <p className="mensaje">No hay vuelos para esa ruta 🙃</p>
       ) : (
         <ListaVuelos
-          vuelos={vuelosFiltrados}
+          vuelos={vuelosOrdenados}
           nombreOrigen={nombreCiudad(origen)}
           nombreDestino={nombreCiudad(destino)}
           vueloSeleccionado={vueloSeleccionado}
